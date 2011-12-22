@@ -1,0 +1,11 @@
+<!-- Indices written at Wed, 21 Dec 2011 14:11:18 UTC -->
+
+<datastore-indexes>
+
+    <!-- Used 1 time in query history -->
+    <datastore-index kind="DataObj" ancestor="false" source="auto">
+        <property name="fileid" direction="asc"/>
+        <property name="offset" direction="asc"/>
+    </datastore-index>
+
+</datastore-indexes>
