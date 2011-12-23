@@ -2,12 +2,13 @@ package xcjavatestapp;
 
 import java.io.*;
 import java.net.*;
+import java.nio.ByteBuffer;
 import java.util.*;
 import javax.servlet.http.*;
 import com.google.appengine.api.datastore.*;
+import com.google.appengine.api.blobstore.*;
 import com.google.appengine.api.urlfetch.*;
-import org.apache.commons.fileupload.*;
-import org.apache.commons.fileupload.servlet.*;
+import com.google.appengine.api.files.*;
 
 import datastore.*;
 
@@ -31,160 +32,108 @@ public class UploadServlet extends HttpServlet{
 		
 		return postid;
 	}
-	public void postFile(URLFetchService us,String servername,String fileid,String filename){
-		String fileurl;
+	public void postFile(URLFetchService us,String fileid,Long posttime,String delpw,String filelink) throws Exception{
+		HTTPRequest req;
+		String param;
 		
-		fileurl = "http://" + servername + "/down/" + fileid + "/" + filename;
+		param  = URLEncoder.encode("fileid","UTF-8") + "=" + URLEncoder.encode(fileid,"UTF-8") + "&" +
+				URLEncoder.encode("filelink","UTF-8") + "=" + URLEncoder.encode(filelink,"UTF-8") + "&" +
+				URLEncoder.encode("posttime","UTF-8") + "=" + URLEncoder.encode(String.valueOf(posttime),"UTF-8") + "&" +
+				URLEncoder.encode("delpw","UTF-8") + "=" + URLEncoder.encode(delpw,"UTF-8") + "&"; 
 		
+		req = new HTTPRequest(new URL("http://xcjavatestapp.appspot.com/post"),HTTPMethod.POST);
+		//req = new HTTPRequest(new URL("http://localhost:8888/post"),HTTPMethod.POST);
+		req.setPayload(param.getBytes());
+		us.fetch(req);
 	}
 	
 	public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException{
 		int index;
 		
 		DatastoreService ds;
+		BlobstoreService bs;
 		URLFetchService us;
+		FileService fs;
 		
-		ServletFileUpload upload;
-		FileItemIterator iter;
-		FileItemStream stream;
+		Map<String,BlobKey> blobMap;
+		BlobKey blobKey;
 		
-		BufferedReader bufReader;
-		String posttype;
+		String postType;
 		String delpw;
-		
-		InputStream reader;
-		byte[] buf;
-		byte[] data;
-		int ret;
-		int bufOffset;
-		int offset;
 		DataObj dataObj;
-		String[] fileNamePart;
+		String filelink;
 		
 		String picUrl;
 		HTTPResponse picRes; 
 		List<HTTPHeader> headerList;
-		byte[] picUrlData;
+		String picMime;
+		String[] fileNamePart;
+		AppEngineFile picFile;
+		FileWriteChannel writeChannel;
 		
+		resp.setCharacterEncoding("UTF-8");
 		resp.setContentType("text/plain");
 		
 		try{
 			ds = DatastoreServiceFactory.getDatastoreService();
+			bs = BlobstoreServiceFactory.getBlobstoreService();
 			us = URLFetchServiceFactory.getURLFetchService();
+			fs = FileServiceFactory.getFileService();
 			
-			upload = new ServletFileUpload();
-			posttype = "";
-			delpw = "";
-			buf = new byte[524288];
+			blobMap = bs.getUploadedBlobs(req);
+			blobKey = blobMap.get("input_post_file");
 			
-			iter = upload.getItemIterator(req);
-			while(iter.hasNext()){
-				stream = iter.next();
-				
-				if(stream.getFieldName().equals("input_post_type") == true){
-					bufReader = new BufferedReader(new InputStreamReader(stream.openStream()));
-					posttype = bufReader.readLine();
-				}else if(stream.getFieldName().equals("input_post_delpw") == true){
-					bufReader = new BufferedReader(new InputStreamReader(stream.openStream()));
-					delpw = bufReader.readLine();
-					if(delpw == null){
-						delpw = "";
-					}
-				}else if(stream.getFieldName().equals("input_post_file") == true && posttype.equals("file") == true){	
-					reader = stream.openStream();
-					offset = 0;
-					bufOffset = 0;
-					dataObj = new DataObj();
-					
-					dataObj.fileid = createFileID();
-					dataObj.type = stream.getContentType();
-					dataObj.delpw = delpw;
-					
-					if(dataObj.type == null){
-						throw new Exception();
-					}
-					
-					while(true){
-						ret = reader.read(buf,bufOffset,buf.length - bufOffset);
-						if(ret == -1){
-							break;
-						}
-												
-						bufOffset += ret;
-						if(bufOffset == buf.length){
-							dataObj.offset = Long.valueOf(offset);
-							dataObj.size = Long.valueOf(bufOffset);
-							dataObj.data = new Blob(buf);
-							dataObj.putDB(ds);
-							
-							offset += bufOffset;
-							bufOffset = 0;
-						}
-					}
-					if(bufOffset > 0){
-						data = new byte[bufOffset];
-						System.arraycopy(buf,0,data,0,bufOffset);
-						
-						dataObj.offset = Long.valueOf(offset);
-						dataObj.size = Long.valueOf(bufOffset);
-						dataObj.data = new Blob(data);
-						dataObj.putDB(ds);
-					}
-					
-					fileNamePart = stream.getName().split("[/\\\\]");
-					resp.getWriter().print("link.jsp?link=http://" + req.getServerName() + "/down/" + dataObj.fileid + "/" + fileNamePart[fileNamePart.length - 1]);
-				}else if(stream.getFieldName().equals("input_post_text") == true && posttype.equals("url") == true){
-					bufReader = new BufferedReader(new InputStreamReader(stream.openStream()));
-					picUrl = bufReader.readLine();
-					
-					picRes = us.fetch(new URL(picUrl));
-					
-					offset = 0;
-					dataObj = new DataObj();
-					
-					dataObj.fileid = createFileID();
-					dataObj.type = "";
-					headerList = picRes.getHeaders();
-					for(index = 0;index < headerList.size();index++){
-						if(headerList.get(index).getName().compareToIgnoreCase("Content-Type") == 0){
-							dataObj.type = headerList.get(index).getValue();
-							break;
-						}
-					}
-					dataObj.delpw = delpw;
-					
-					picUrlData = picRes.getContent();
-					while(offset < picUrlData.length){
-						ret = picUrlData.length - offset;
-						if(ret >= buf.length){
-							ret = buf.length;
-							System.arraycopy(picUrlData,offset,buf,0,ret);
-							
-							dataObj.offset = Long.valueOf(offset);
-							dataObj.size = Long.valueOf(ret);
-							dataObj.data = new Blob(buf);
-							dataObj.putDB(ds);
-							
-							offset += ret;
-						}else{
-							data = new byte[ret];
-							System.arraycopy(picUrlData,offset,data,0,ret);
-							
-							dataObj.offset = Long.valueOf(offset);
-							dataObj.size = Long.valueOf(ret);
-							dataObj.data = new Blob(data);
-							dataObj.putDB(ds);
-							
-							break;
-						}
-					}
-					
-					fileNamePart = picUrl.split("/");
-					resp.getWriter().print("link.jsp?link=http://" + req.getServerName() + "/down/" + dataObj.fileid + "/" + fileNamePart[fileNamePart.length - 1]);
+			postType = req.getParameter("input_post_type");
+			delpw = req.getParameter("input_post_delpw");
+			
+			if(postType.equals("file") == true){
+				if(blobKey == null){
+					throw new Exception();
 				}
-			}		
-		}catch(Exception e){
-			e.printStackTrace(resp.getWriter());
-		}
+				
+				dataObj = new DataObj();
+				dataObj.fileid = createFileID();
+				dataObj.posttime = new Date().getTime();
+				dataObj.delpw = delpw;
+				dataObj.blobkey = blobKey;
+				dataObj.putDB(ds);
+				
+				filelink = "http://" + req.getServerName() + "/down/" + dataObj.fileid + "/" + req.getParameter("input_post_text");
+				resp.getWriter().print("link.jsp?link=" + filelink);
+				
+				postFile(us,dataObj.fileid,dataObj.posttime,dataObj.delpw,filelink);
+			}else if(postType.equals("url") == true){
+				picUrl = req.getParameter("input_post_text");
+				
+				picRes = us.fetch(new URL(picUrl));
+				headerList = picRes.getHeaders();
+				picMime = "application/octet-stream";
+				for(index = 0;index < headerList.size();index++){
+					if(headerList.get(index).getName().compareToIgnoreCase("Content-Type") == 0){
+						picMime = headerList.get(index).getValue();
+						break;
+					}
+				}
+				
+				fileNamePart = picUrl.split("/");
+				
+				picFile = fs.createNewBlobFile(picMime,fileNamePart[fileNamePart.length - 1]);
+				writeChannel = fs.openWriteChannel(picFile,true);
+				writeChannel.write(ByteBuffer.wrap(picRes.getContent()));
+				writeChannel.closeFinally();
+				
+				dataObj = new DataObj();
+				dataObj.fileid = createFileID();
+				dataObj.posttime = new Date().getTime();
+				dataObj.delpw = delpw;
+				dataObj.blobkey = fs.getBlobKey(picFile);
+				dataObj.putDB(ds);
+				
+				filelink = "http://" + req.getServerName() + "/down/" + dataObj.fileid + "/" + fileNamePart[fileNamePart.length - 1];
+				resp.getWriter().print("link.jsp?link=" + filelink);
+				
+				postFile(us,dataObj.fileid,dataObj.posttime,dataObj.delpw,filelink);
+			}
+		}catch(Exception e){}
 	}
 }

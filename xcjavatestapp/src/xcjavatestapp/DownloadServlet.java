@@ -4,9 +4,10 @@ import java.io.*;
 import java.util.*;
 import javax.servlet.http.*;
 import com.google.appengine.api.datastore.*;
-import com.google.appengine.api.datastore.Query.FilterOperator;
-import com.google.appengine.api.datastore.Query.SortDirection;
+import com.google.appengine.api.datastore.Query.*;
+import com.google.appengine.api.blobstore.*;
 import com.google.appengine.api.memcache.*;
+import com.google.appengine.api.images.*;
 
 import datastore.*;
 
@@ -17,77 +18,59 @@ public class DownloadServlet extends HttpServlet{
 		String fileid;
 		
 		DatastoreService ds;
+		BlobstoreService bs;
 		MemcacheService ms;
+		ImagesService is;
 		
-		int index;
-		List<String> dataObjCacheList;
-		Map<String,Object> dataObjMap;
+		Key dataObjGroupKey;
 		Query q;
-		List<Entity> dataObjList;
+		Entity dataObjEntity;
 		DataObj dataObj;
-
-		OutputStream writer;
 		
-	
+		String downSize;
+		int picSize;
+		Image pic;
+		
+		try{
 			urlPart = req.getRequestURI().split("/");
 			if(urlPart.length != 4){
-				//throw new Exception();
+				throw new Exception();
 			}
 		
 			ds = DatastoreServiceFactory.getDatastoreService();
+			bs = BlobstoreServiceFactory.getBlobstoreService();
 			ms = MemcacheServiceFactory.getMemcacheService();
+			is = ImagesServiceFactory.getImagesService();
 			
 			fileid = urlPart[2];
 			
-			writer = resp.getOutputStream();
-			
 			try{
-				dataObjCacheList = (List<String>)ms.get("DataObjCacheList_" + fileid);
-				if(dataObjCacheList == null){
+				dataObjEntity = (Entity)ms.get("DataObjEntityCache_" + fileid);
+				if(dataObjEntity == null){
 					throw new Exception();
 				}
-				
-				dataObjMap = (Map<String,Object>)ms.getAll(dataObjCacheList);
-				
-				dataObjList = new ArrayList<Entity>();
-				for(index = 0;index < dataObjCacheList.size();index++){
-					if(dataObjMap.containsKey(dataObjCacheList.get(index)) == false){
-						throw new Exception();
-					}
-					dataObjList.add((Entity)dataObjMap.get(dataObjCacheList.get(index)));
-				}
 			}catch(Exception e){
-				q = new Query("DataObj");
+				dataObjGroupKey = KeyFactory.createKey("DataObjGroup",1L);
+				q = new Query("DataObj",dataObjGroupKey);
 				q.addFilter("fileid",FilterOperator.EQUAL,fileid);
-				q.addSort("fileid");
-				q.addSort("offset",SortDirection.ASCENDING);
 				
-				dataObjList = ds.prepare(q).asList(FetchOptions.Builder.withLimit(1024));
-				
-				dataObjCacheList = new ArrayList<String>();
-				dataObjMap = new HashMap<String,Object>();
-				
-				for(index = 0;index < dataObjList.size();index++){
-					dataObjCacheList.add("DataObjEntity_" + fileid + "_" + index);
-					dataObjMap.put("DataObjEntity_" + fileid + "_" + index,dataObjList.get(index));
-				}
-				ms.putAll(dataObjMap);
-				ms.put("DataObjCacheList_" + fileid,dataObjCacheList);
+				dataObjEntity = ds.prepare(q).asSingleEntity();
+				ms.put("DataObjEntityCache_" + fileid,dataObjEntity);
 			}
 			
 			dataObj = new DataObj();
-			dataObj.getDB(dataObjList.get(0));
-			if(dataObj.type.equals("") == true){
-				resp.setContentType("application/octet-stream");
+			dataObj.getDB(dataObjEntity);
+			
+			downSize = req.getParameter("size");
+			if(downSize != null){
+				picSize = Integer.valueOf(downSize);
+				pic = ImagesServiceFactory.makeImageFromBlob(dataObj.blobkey);
+				pic = is.applyTransform(ImagesServiceFactory.makeResize(picSize,picSize),pic);
+				resp.setContentType("image/" + pic.getFormat().name());
+				resp.getOutputStream().write(pic.getImageData());
 			}else{
-				resp.setContentType(dataObj.type);
+				bs.serve(dataObj.blobkey,resp);
 			}
-				
-			for(index = 0;index < dataObjList.size();index++){
-				dataObj.getDB(dataObjList.get(index));
-				
-				writer.write(dataObj.data.getBytes(),0,(int)(dataObj.size + 0));
-			}
-		
+		}catch(Exception e){}
 	}
 }

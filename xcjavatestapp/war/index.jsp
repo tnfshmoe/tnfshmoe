@@ -1,5 +1,14 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ page import="com.google.appengine.api.blobstore.*" %>
+
+<%
+	BlobstoreService bs;
+
+	bs = BlobstoreServiceFactory.getBlobstoreService();
+%>
+
 <html>
 	<head>
 		<meta http-equiv="content-type" content="text/html; charset=UTF-8">
@@ -107,15 +116,16 @@
 					e_div_main.observe('drop',function(event){
 						var e_input_post_text;
 	
+						postType = 'file';
+						
 						currFile = event.dataTransfer.files[0];
-	
-						$('button_submit').style.display = '';
 						
 						e_input_post_text = document.getElementsByName('input_post_text')[0];
 						e_input_post_text.readOnly = true;
 						e_input_post_text.value = currFile.name;
 						
 						$('div_data').style.display = '';
+						$('button_submit').style.display = '';
 						
 						event.stop();
 					});
@@ -172,6 +182,7 @@
 					e_form.append('input_post_type',e_input_post_type.value);
 					e_form.append('input_post_delpw',document.getElementsByName('input_post_delpw')[0].value);
 					if(postType == 'file'){
+						e_form.append('input_post_text',document.getElementsByName('input_post_text')[0].value);
 						e_form.append('input_post_file',currFile);
 					}else if(postType == 'url'){
 						e_form.append('input_post_text',document.getElementsByName('input_post_text')[0].value);	
@@ -183,7 +194,7 @@
 							location.href = xhr.responseText;
 						}
 					}
-					xhr.open('POST','/upload', true);
+					xhr.open('POST','<%= bs.createUploadUrl("/upload") %>', true);
 					xhr.send(e_form);
 				}else{
 					e_input_post_file = document.getElementsByName('input_post_file')[0];
@@ -201,6 +212,12 @@
 			<div id="div_mask_upload" style="margin:300px; auto; color:#FFFFFF; font-size:60px; font-weight:bold; display:none;">上傳中...</div>
 		</div>
 		<div id="div_main" class="div_fullscreen" style="text-align:center; z-index:0;">
+			<table>
+				<tr>
+					<td><a href="/index.jsp" style="font-weight:bold;">上傳</a></td>
+					<td><a href="/gallery.jsp" style="font-weight:bold;">畫廊</a></td>
+				</tr>
+			</table>
 			<div style="width:400px; margin:200px auto; text-align:center;">
 				<form id="form_post" action="/upload" method="post" enctype="multipart/form-data">
 					<input name="input_post_type" type="hidden">
@@ -217,7 +234,7 @@
 						<tr>
 							<td>
 								<div class="select_button" onmouseover="this.className = 'select_button_hi';" onmouseout="this.className = 'select_button';">
-									<div style="width:100px; position:absolute;">選擇圖片</div>
+									<div style="width:100px; position:absolute;">選擇檔案</div>
 									<input name="input_post_file" type="file" class="post_file" onchange="postfile();">
 								</div>
 							</td>

@@ -1,34 +1,32 @@
 package datastore;
 
 import com.google.appengine.api.datastore.*;
+import com.google.appengine.api.blobstore.*;
 
 public class DataObj {
 	public String fileid;
-	public Long offset;
-	public Long size;
-	public String type;
+	public Long posttime;
 	public String delpw;
-	public Blob data;
+	public BlobKey blobkey;
 	
 	public void getDB(Entity entity){
 		this.fileid = (String)entity.getProperty("fileid");
-		this.offset = (Long)entity.getProperty("offset");
-		this.size = (Long)entity.getProperty("size");
-		this.type = (String)entity.getProperty("type");
+		this.posttime = (Long)entity.getProperty("posttime");
 		this.delpw = (String)entity.getProperty("delpw");
-		this.data = (Blob)entity.getProperty("data");
+		this.blobkey = (BlobKey)entity.getProperty("blobkey");
 	}
 	
 	public void putDB(DatastoreService ds){
+		Key groupKey;
 		Entity entity;
 		
-		entity = new Entity("DataObj");
+		groupKey = KeyFactory.createKey("DataObjGroup",1L);
+		entity = new Entity("DataObj",groupKey);
+		
 		entity.setProperty("fileid",this.fileid);
-		entity.setProperty("offset",this.offset);
-		entity.setProperty("size",this.size);
-		entity.setProperty("type",this.type);
+		entity.setProperty("posttime",this.posttime);
 		entity.setProperty("delpw",this.delpw);
-		entity.setProperty("data",this.data);
+		entity.setProperty("blobkey",this.blobkey);
 		
 		ds.put(entity);
 	}

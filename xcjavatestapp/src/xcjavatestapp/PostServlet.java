@@ -18,11 +18,10 @@ public class PostServlet extends HttpServlet{
 		
 		postObj = new PostObj();
 		postObj.fileid = req.getParameter("fileid");
-		postObj.fileurl = req.getParameter("fileurl");
+		postObj.filelink = req.getParameter("filelink");
+		postObj.posttime = Long.valueOf(req.getParameter("posttime"));
 		postObj.delpw = req.getParameter("delpw");
-		postObj.posttime = new Date().getTime();
 		postObj.flag = "";
-		
 		postObj.putDB(ds);
 	}
 }

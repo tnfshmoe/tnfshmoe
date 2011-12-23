@@ -97,10 +97,16 @@
 		</script>
 	</head>
 	<body onload="init();">
+		<table>
+			<tr>
+				<td><a href="/index.jsp" style="font-weight:bold;">上傳</a></td>
+				<td><a href="/gallery.jsp" style="font-weight:bold;">畫廊</a></td>
+			</tr>
+		</table>
 		<div style="width:100%; margin:100px 0px; text-align:center;">
-			<div style="width:300px; margin:0px auto;">
+			<div style="margin:0px auto;">
 				<a href="<%= link %>" class="highslide" onclick="return hs.expand(this)">
-					<img src="<%= link %>" height="300px" width="300px" />
+					<img src="<%= link %>?size=300" />
 				</a>
 			</div>
 			<input type="text" readonly="readonly" value="<%= link %>" class="link_text" style="width:400px; margin:20px 0px;" onclick="this.select();">

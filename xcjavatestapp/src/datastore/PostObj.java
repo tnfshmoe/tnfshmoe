@@ -4,14 +4,14 @@ import com.google.appengine.api.datastore.*;
 
 public class PostObj{
 	public String fileid;
-	public String fileurl;
+	public String filelink;
 	public Long posttime;
 	public String delpw;
 	public String flag;
 	
 	public void getDB(DatastoreService ds,Entity entity){
 		this.fileid = (String)entity.getProperty("fileid");
-		this.fileurl = (String)entity.getProperty("fileurl");
+		this.filelink = (String)entity.getProperty("filelink");
 		this.posttime = (Long)entity.getProperty("posttime");
 		this.delpw = (String)entity.getProperty("delpw");
 		this.flag = (String)entity.getProperty("flag");
@@ -25,7 +25,7 @@ public class PostObj{
 		entity = new Entity("PostObj",groupKey);
 		
 		entity.setProperty("fileid",this.fileid);
-		entity.setProperty("fileurl",this.fileurl);
+		entity.setProperty("filelink",this.filelink);
 		entity.setProperty("posttime",this.posttime);
 		entity.setProperty("delpw",this.delpw);
 		entity.setProperty("flag",this.flag);
