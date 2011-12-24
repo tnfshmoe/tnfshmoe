@@ -18,8 +18,8 @@ public class DownloadServlet extends HttpServlet{
 		String fileid;
 		
 		DatastoreService ds;
-		BlobstoreService bs;
 		MemcacheService ms;
+		BlobstoreService bs;
 		ImagesService is;
 		
 		Key dataObjGroupKey;
@@ -38,8 +38,8 @@ public class DownloadServlet extends HttpServlet{
 			}
 		
 			ds = DatastoreServiceFactory.getDatastoreService();
-			bs = BlobstoreServiceFactory.getBlobstoreService();
 			ms = MemcacheServiceFactory.getMemcacheService();
+			bs = BlobstoreServiceFactory.getBlobstoreService();
 			is = ImagesServiceFactory.getImagesService();
 			
 			fileid = urlPart[2];

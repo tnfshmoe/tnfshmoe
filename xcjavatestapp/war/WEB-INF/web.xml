@@ -31,6 +31,15 @@ http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" version="2.5">
 		<url-pattern>/down/*</url-pattern>
 	</servlet-mapping>
 	
+	<servlet>
+		<servlet-name>InitServlet</servlet-name>
+		<servlet-class>xcjavatestapp.InitServlet</servlet-class>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>InitServlet</servlet-name>
+		<url-pattern>/init</url-pattern>
+	</servlet-mapping>
+	
 	<welcome-file-list>
 		<welcome-file>index.jsp</welcome-file>
 	</welcome-file-list>

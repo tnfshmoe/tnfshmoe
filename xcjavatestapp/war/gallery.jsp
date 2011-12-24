@@ -35,23 +35,25 @@
 		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/prototype/1.7.0.0/prototype.js"></script>
 	</head>
 	<body>
-		<table>
+		<table style="position:absolute; top:10px; left:10px;">
 			<tr>
 				<td><a href="/index.jsp" style="font-weight:bold;">上傳</a></td>
 				<td><a href="/gallery.jsp" style="font-weight:bold;">畫廊</a></td>
 			</tr>
 		</table>
-	<%
-	for(index = 0;index < postObjList.size();index++){
-		postObj.getDB(ds,postObjList.get(index));
-		%>
-		<div style="width:200px; height:200px; margin:5px 5px 5px 5px; text-align:center; float:left;">
-			<a href="<%= postObj.filelink %>" class="highslide" onclick="return hs.expand(this)">
-				<img src="<%= postObj.filelink %>?size=200" />
-			</a>
-		</div>
+		<div style="width:100%; margin:60px 0px 0px 0px;">
 		<%
-	}
-	%>
+		for(index = 0;index < postObjList.size();index++){
+			postObj.getDB(ds,postObjList.get(index));
+			%>
+			<div style="width:150px; height:150px; margin:5px 5px 5px 5px; text-align:center; float:left;">
+				<a href="<%= postObj.filelink %>" class="highslide" onclick="return hs.expand(this);">
+					<img src="<%= postObj.filelink %>?size=150" />
+				</a>
+			</div>
+			<%
+		}
+		%>
+		</div>
 	</body>
 </html>

@@ -1,10 +1,4 @@
-<!-- Indices written at Fri, 23 Dec 2011 14:43:35 UTC -->
+<!-- Indices written at Sat, 24 Dec 2011 17:32:27 UTC -->
 
-<datastore-indexes>
+<datastore-indexes/>
 
-    <!-- Used 1 time in query history -->
-    <datastore-index kind="PostObj" ancestor="true" source="auto">
-        <property name="posttime" direction="desc"/>
-    </datastore-index>
-
-</datastore-indexes>

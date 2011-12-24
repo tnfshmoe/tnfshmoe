@@ -5,7 +5,7 @@ var ZeroClipboard = {
 	
 	version: "1.0.7",
 	clients: {}, // registered upload clients on page, indexed by id
-	moviePath: 'ZeroClipboard.swf', // URL to movie
+	moviePath: '/zeroclipboard/ZeroClipboard.swf', // URL to movie
 	nextId: 1, // ID of next movie
 	
 	$: function(thingy) {
@@ -134,7 +134,7 @@ ZeroClipboard.Client.prototype = {
 			}
 		}
 		
-		// style.backgroundColor = '#f00'; // debug
+		//style.backgroundColor = '#f00'; // debug
 		
 		appendElem.appendChild(this.div);
 		
