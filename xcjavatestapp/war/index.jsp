@@ -35,6 +35,6 @@
 		<title>Hello App Engine</title>
 	</head>
 	<frameset>
-		<frame src="<%= serverlink %>/uploadpage.jsp" />
+		<frame src="<%= serverlink %>/uploadpage" />
 	</frameset>
 </html>

@@ -1,4 +1,4 @@
-package xcjavatestapp;
+package serverapp;
 
 import java.io.*;
 import java.util.*;

@@ -325,7 +325,7 @@
 					}
 					xhr.onreadystatechange = function(){
 						if(xhr.readyState == 4 && xhr.status == 200){
-							location.href = xhr.responseText;
+							window.top.location.href = xhr.responseText;
 						}
 					}
 					xhr.open('POST','<%= uploadlink %>', true);

@@ -1,13 +1,24 @@
 package datastore;
 
+import java.io.*;
 import com.google.appengine.api.datastore.*;
 
-public class PostObj{
+@SuppressWarnings("serial")
+public class PostObj implements Serializable{
 	public String fileid;
 	public String filelink;
 	public Long posttime;
 	public String delpw;
 	public String flag;
+	
+	public PostObj(){};
+	public PostObj(String fileid,String filelink,Long posttime,String delpw,String flag){
+		this.fileid = fileid;
+		this.filelink =filelink;
+		this. posttime = posttime;
+		this .delpw = delpw;
+		this.flag = flag;
+	}
 	
 	public void getDB(DatastoreService ds,Entity entity){
 		this.fileid = (String)entity.getProperty("fileid");

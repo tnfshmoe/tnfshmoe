@@ -4,24 +4,27 @@ import java.io.*;
 import java.util.*;
 import javax.servlet.http.*;
 import com.google.appengine.api.datastore.*;
+import com.google.gson.*;
 
 import datastore.*;
 
 @SuppressWarnings("serial")
 public class PostServlet extends HttpServlet{
-	public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException{
+	public void doPost(HttpServletRequest req,HttpServletResponse resp) throws IOException{
+		int index;
+		
 		DatastoreService ds;
 			
-		PostObj postObj;
+		Gson gson;
+		List<PostObj> postObjList;
 		
 		ds = DatastoreServiceFactory.getDatastoreService();
 		
-		postObj = new PostObj();
-		postObj.fileid = req.getParameter("fileid");
-		postObj.filelink = req.getParameter("filelink");
-		postObj.posttime = Long.valueOf(req.getParameter("posttime"));
-		postObj.delpw = req.getParameter("delpw");
-		postObj.flag = "";
-		postObj.putDB(ds);
+		gson = new Gson();
+		postObjList = gson.fromJson(req.getParameter("postlist"),List.class);
+		
+		for(index = 0;index < postObjList.size();index++){
+			postObjList.get(index).putDB(ds);
+		}
 	}
 }

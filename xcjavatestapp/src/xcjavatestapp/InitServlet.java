@@ -7,7 +7,7 @@ import com.google.appengine.api.memcache.*;
 
 @SuppressWarnings("serial")
 public class InitServlet extends HttpServlet{
-	public void doGet(HttpServletRequest req,HttpServletResponse resp)throws IOException{
+	public void doGet(HttpServletRequest req,HttpServletResponse resp) throws IOException{
 		DatastoreService ds;
 		MemcacheService ms;
 		

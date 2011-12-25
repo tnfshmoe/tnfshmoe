@@ -12,19 +12,34 @@ http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" version="2.5">
 		<servlet-name>PostServlet</servlet-name>
 		<url-pattern>/post</url-pattern>
 	</servlet-mapping>
+	<servlet>
+		<servlet-name>PostLinkServlet</servlet-name>
+		<servlet-class>xcjavatestapp.PostLinkServlet</servlet-class>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>PostLinkServlet</servlet-name>
+		<url-pattern>/postlink</url-pattern>
+	</servlet-mapping>
 
 	<servlet>
+		<servlet-name>UploadpageServlet</servlet-name>
+		<servlet-class>serverapp.UploadpageServlet</servlet-class>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>UploadpageServlet</servlet-name>
+		<url-pattern>/uploadpage</url-pattern>
+	</servlet-mapping>
+	<servlet>
 		<servlet-name>UploadServlet</servlet-name>
-		<servlet-class>xcjavatestapp.UploadServlet</servlet-class>
+		<servlet-class>serverapp.UploadServlet</servlet-class>
 	</servlet>
 	<servlet-mapping>
 		<servlet-name>UploadServlet</servlet-name>
 		<url-pattern>/upload</url-pattern>
 	</servlet-mapping>
-	
 	<servlet>
 		<servlet-name>DownloadServlet</servlet-name>
-		<servlet-class>xcjavatestapp.DownloadServlet</servlet-class>
+		<servlet-class>serverapp.DownloadServlet</servlet-class>
 	</servlet>
 	<servlet-mapping>
 		<servlet-name>DownloadServlet</servlet-name>

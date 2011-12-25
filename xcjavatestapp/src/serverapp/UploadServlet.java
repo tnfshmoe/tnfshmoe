@@ -1,4 +1,4 @@
-package xcjavatestapp;
+package serverapp;
 
 import java.io.*;
 import java.net.*;
@@ -10,6 +10,7 @@ import com.google.appengine.api.memcache.*;
 import com.google.appengine.api.blobstore.*;
 import com.google.appengine.api.urlfetch.*;
 import com.google.appengine.api.files.*;
+import com.google.gson.*;
 
 import datastore.*;
 
@@ -33,19 +34,38 @@ public class UploadServlet extends HttpServlet{
 		
 		return uid;
 	}
-	public void postFile(URLFetchService us,String fileid,Long posttime,String delpw,String filelink) throws Exception{
+	public String postFile(URLFetchService us,List<PostObj> postobjlist) throws Exception{
+		int index;
+		
+		Gson gson;
 		HTTPRequest req;
 		String param;
 		
-		param  = URLEncoder.encode("fileid","UTF-8") + "=" + URLEncoder.encode(fileid,"UTF-8") + "&" +
-				URLEncoder.encode("filelink","UTF-8") + "=" + URLEncoder.encode(filelink,"UTF-8") + "&" +
-				URLEncoder.encode("posttime","UTF-8") + "=" + URLEncoder.encode(String.valueOf(posttime),"UTF-8") + "&" +
-				URLEncoder.encode("delpw","UTF-8") + "=" + URLEncoder.encode(delpw,"UTF-8") + "&"; 
+		String linkID;
+		List<String> linkList;
 		
+		gson = new Gson();
+		
+		param = URLEncoder.encode("postlist","UTF-8") + "=" + URLEncoder.encode(gson.toJson(postobjlist),"UTF-8");
 		req = new HTTPRequest(new URL("http://xcjavatestapp.appspot.com/post"),HTTPMethod.POST);
 		//req = new HTTPRequest(new URL("http://localhost:8888/post"),HTTPMethod.POST);
 		req.setPayload(param.getBytes());
 		us.fetch(req);
+		
+		linkID = createUID();
+		linkList = new ArrayList<String>();
+		for(index = 0;index < postobjlist.size();index++){
+			linkList.add(postobjlist.get(index).filelink);
+		}
+		
+		param = URLEncoder.encode("linkid","UTF-8") + "=" + URLEncoder.encode(linkID,"UTF-8") + '&' +
+				URLEncoder.encode("linklist","UTF-8") + "=" + URLEncoder.encode(gson.toJson(linkList),"UTF-8");
+		req = new HTTPRequest(new URL("http://xcjavatestapp.appspot.com/postlink"),HTTPMethod.POST);
+		//req = new HTTPRequest(new URL("http://localhost:8888/postlink"),HTTPMethod.POST);
+		req.setPayload(param.getBytes());
+		us.fetch(req);
+		
+		return linkID;
 	}
 	
 	public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException{
@@ -76,13 +96,14 @@ public class UploadServlet extends HttpServlet{
 		AppEngineFile picFile;
 		FileWriteChannel writeChannel;
 		
-		List<String> linkList;
+		PostObj postObj;
+		List<PostObj> postObjList;
 		String linkID;
 		
 		resp.setCharacterEncoding("UTF-8");
 		resp.setContentType("text/plain");
 		
-		//try{
+		try{
 			ds = DatastoreServiceFactory.getDatastoreService();
 			ms = MemcacheServiceFactory.getMemcacheService();
 			bs = BlobstoreServiceFactory.getBlobstoreService();
@@ -91,7 +112,7 @@ public class UploadServlet extends HttpServlet{
 			
 			blobMap = bs.getUploadedBlobs(req);
 			postCount = Integer.valueOf(req.getParameter("input_post_count"));
-			linkList = new ArrayList<String>();
+			postObjList = new ArrayList<PostObj>();
 			
 			for(postIndex = 0;postIndex < postCount;postIndex++){
 				try{
@@ -117,8 +138,9 @@ public class UploadServlet extends HttpServlet{
 						dataObj.putDB(ds);
 						
 						filelink = "http://" + req.getServerName() + "/down/" + dataObj.fileid + "/" + postText;
-						linkList.add(filelink);
-						postFile(us,dataObj.fileid,dataObj.posttime,dataObj.delpw,filelink);
+						
+						postObj = new PostObj(dataObj.fileid,filelink,dataObj.posttime,dataObj.delpw,"");
+						postObjList.add(postObj);
 					}else if(postType.equals("url") == true){
 						picUrl = postText;
 						
@@ -147,21 +169,20 @@ public class UploadServlet extends HttpServlet{
 						dataObj.putDB(ds);
 						
 						filelink = "http://" + req.getServerName() + "/down/" + dataObj.fileid + "/" + fileNamePart[fileNamePart.length - 1];
-						linkList.add(filelink);
 						
-						postFile(us,dataObj.fileid,dataObj.posttime,dataObj.delpw,filelink);
+						postObj = new PostObj(dataObj.fileid,filelink,dataObj.posttime,dataObj.delpw,"");
+						postObjList.add(postObj);
 					}
 				}catch(Exception e){}
 			}
 			
-			linkID = createUID();
-			ms.put("LinkList_" + linkID,linkList);
-			
+			linkID = postFile(us,postObjList);
+						
 			if(req.getParameter("specflag") != null){
-				resp.getWriter().print("/link.jsp?linkid=" + linkID);
+				resp.getWriter().print("http://xcjavatestapp.appspot.com/link.jsp?linkid=" + linkID);
 			}else{
-				resp.sendRedirect("/link.jsp?linkid=" + linkID);
+				resp.sendRedirect("http://xcjavatestapp.appspot.com/link.jsp?linkid=" + linkID);
 			}
-		//}catch(Exception e){}
+		}catch(Exception e){}
 	}
 }
